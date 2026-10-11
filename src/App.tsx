@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { FolderTree, Terminal, Monitor, Code2, Check, Copy, RefreshCw } from "lucide-react";
+import { useState, useRef } from "react";
+import { FolderTree, Terminal, Monitor, Code2, Check, Copy, RotateCw } from "lucide-react";
 
 const ONGLETS = [
   "STATTIMES",
@@ -17,8 +17,8 @@ interface ArticleData {
   image_url: string;
 }
 
-// Données d'exemple conformes aux scrapers /SOURCE_ONGLET/ pour la prévisualisation web
-const ARTICLES_PAR_SOURCE: Record<NomOnglet, ArticleData[]> = {
+// Données d'exemple initiales conformes aux scrapers /SOURCE_ONGLET/
+const DONNEES_INITIALES: Record<NomOnglet, ArticleData[]> = {
   STATTIMES: [
     {
       title: "Cathay Cargo operates first commercial flight into Western Sydney International Airport",
@@ -119,39 +119,70 @@ const ARTICLES_PAR_SOURCE: Record<NomOnglet, ArticleData[]> = {
 export default function App() {
   const [ongletActif, setOngletActif] = useState<NomOnglet>("STATTIMES");
   const [vueArchitecture, setVueArchitecture] = useState(false);
-  const [fichierSelectionne, setFichierSelectionne] = useState("tableau_articles.py");
+  const [fichierSelectionne, setFichierSelectionne] = useState("bouton_actualisation.py");
   const [copie, setCopie] = useState(false);
 
-  const articles = ARTICLES_PAR_SOURCE[ongletActif] || [];
+  // Simulation du cache en mémoire durant la session (initialisé au lancement de l'application)
+  const [cacheArticles, setCacheArticles] = useState<Record<NomOnglet, ArticleData[]>>(() => ({
+    STATTIMES: DONNEES_INITIALES.STATTIMES,
+    SUPPLYCHAINDIVE: DONNEES_INITIALES.SUPPLYCHAINDIVE,
+    AIRCARGOWEEK: DONNEES_INITIALES.AIRCARGOWEEK,
+    FREIGHTWAVES: DONNEES_INITIALES.FREIGHTWAVES,
+    "SEATRADE-MARITIME": DONNEES_INITIALES["SEATRADE-MARITIME"],
+  }));
+
+  // État de rotation de l'icône d'actualisation par onglet
+  const [enActualisation, setEnActualisation] = useState<Record<NomOnglet, boolean>>({
+    STATTIMES: false,
+    SUPPLYCHAINDIVE: false,
+    AIRCARGOWEEK: false,
+    FREIGHTWAVES: false,
+    "SEATRADE-MARITIME": false,
+  });
+
+  const [dateDerniereMaj, setDateDerniereMaj] = useState<Record<NomOnglet, string>>({
+    STATTIMES: "Session start",
+    SUPPLYCHAINDIVE: "Session start",
+    AIRCARGOWEEK: "Session start",
+    FREIGHTWAVES: "Session start",
+    "SEATRADE-MARITIME": "Session start",
+  });
+
+  const declencherActualisation = (source: NomOnglet) => {
+    if (enActualisation[source]) return;
+
+    setEnActualisation((prev) => ({ ...prev, [source]: true }));
+
+    // Simule la requête réseau asynchrone (1.2s) avec rotation continue de l'icône
+    setTimeout(() => {
+      setEnActualisation((prev) => ({ ...prev, [source]: false }));
+      setDateDerniereMaj((prev) => ({
+        ...prev,
+        [source]: new Date().toLocaleTimeString(),
+      }));
+    }, 1200);
+  };
 
   const fichiersPython: Record<string, { chemin: string; description: string }> = {
-    "tableau_articles.py": {
-      chemin: "/GESTION_ARTICLE/composants/tableau_articles.py",
-      description: "Passive QTableWidget rendering Image (1st), Title (2nd), Date (3rd) with no click actions",
+    "bouton_actualisation.py": {
+      chemin: "/GESTION_ARTICLE/composants/bouton_actualisation.py",
+      description: "QAbstractButton with custom QPainter rotating vector icon (no emoji, no unicode)",
+    },
+    "service_cache_articles.py": {
+      chemin: "/GESTION_ARTICLE/services/service_cache_articles.py",
+      description: "In-memory session cache ensuring instant tab switches without network calls",
     },
     "panneau_source_articles.py": {
       chemin: "/GESTION_ARTICLE/composants/panneau_source_articles.py",
-      description: "Reusable tab content panel hosting TableauArticles and status header for each source",
-    },
-    "interface_extracteur.py": {
-      chemin: "/GESTION_ARTICLE/services/extracteurs/interface_extracteur.py",
-      description: "Abstract interface defining article extraction contract (SOLID / DIP / OCP)",
-    },
-    "fabrique_extracteurs.py": {
-      chemin: "/GESTION_ARTICLE/services/extracteurs/fabrique_extracteurs.py",
-      description: "Factory mapping each source tab to its concrete extractor without tight coupling",
-    },
-    "tache_chargement_articles.py": {
-      chemin: "/GESTION_ARTICLE/services/tache_chargement_articles.py",
-      description: "QThread handling background network scraping without blocking the GUI (Rule 16)",
-    },
-    "modele_article.py": {
-      chemin: "/GESTION_ARTICLE/modeles/modele_article.py",
-      description: "Domain model representing article data (titre, date, url_image, url_source)",
+      description: "Tab content view placing the rotating refresh icon at the top right",
     },
     "controleur_principal.py": {
       chemin: "/GESTION_ARTICLE/controleurs/controleur_principal.py",
-      description: "Coordinates tab switching, async scraper threads, and memory caching",
+      description: "Checks cache before fetch, handles manual refresh requests and emits loading states",
+    },
+    "tableau_articles.py": {
+      chemin: "/GESTION_ARTICLE/composants/tableau_articles.py",
+      description: "Passive QTableWidget rendering Image (1st), Title (2nd), Date (3rd) without click actions",
     },
   };
 
@@ -160,6 +191,9 @@ export default function App() {
     setCopie(true);
     setTimeout(() => setCopie(false), 2000);
   };
+
+  const articlesActifs = cacheArticles[ongletActif] || [];
+  const estEnCours = enActualisation[ongletActif];
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col font-sans">
@@ -246,17 +280,43 @@ export default function App() {
                 })}
               </div>
 
-              {/* Tab Content Panel: Articles Table */}
+              {/* Tab Content Panel */}
               <div className="flex-1 bg-white border border-t-0 border-slate-300 rounded-b p-4 flex flex-col">
-                <div className="flex items-center justify-between mb-3 text-xs text-slate-500">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-semibold text-slate-700">{ongletActif}</span>
-                    <span>&bull;</span>
-                    <span>{articles.length} articles loaded</span>
+                {/* Panel Header: Left Info + Top-Right Rotating Refresh Icon Button */}
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <div className="flex items-center space-x-2 text-xs">
+                    <span className="font-semibold text-slate-800">{ongletActif}</span>
+                    <span className="text-slate-400">&bull;</span>
+                    <span className="text-slate-500">
+                      {estEnCours ? "Updating articles from source..." : `${articlesActifs.length} articles in session cache`}
+                    </span>
+                    <span className="bg-emerald-50 text-emerald-700 text-[10px] font-medium px-2 py-0.5 rounded border border-emerald-200">
+                      Cached
+                    </span>
                   </div>
-                  <span className="text-[11px] text-slate-400">
-                    Read-only view &bull; No click actions configured
-                  </span>
+
+                  {/* Top-Right Refresh Button with Rotating Icon */}
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      Last: {dateDerniereMaj[ongletActif]}
+                    </span>
+                    <button
+                      onClick={() => declencherActualisation(ongletActif)}
+                      disabled={estEnCours}
+                      title="Refresh articles"
+                      className={`p-1.5 rounded border transition flex items-center justify-center ${
+                        estEnCours
+                          ? "bg-red-50 text-red-600 border-red-200 cursor-not-allowed"
+                          : "bg-white hover:bg-slate-100 text-slate-600 hover:text-red-600 border-slate-300"
+                      }`}
+                    >
+                      <RotateCw
+                        className={`w-4 h-4 transition-transform ${
+                          estEnCours ? "animate-spin text-red-600" : ""
+                        }`}
+                      />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Table Component */}
@@ -270,10 +330,10 @@ export default function App() {
 
                   {/* Table Rows (Non-clickable, read-only display) */}
                   <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
-                    {articles.map((art, idx) => (
+                    {articlesActifs.map((art, idx) => (
                       <div
                         key={idx}
-                        className={`grid grid-cols-12 items-center py-2.5 px-3 select-none text-xs ${
+                        className={`grid grid-cols-12 items-center py-2.5 px-3 select-none text-xs transition-colors ${
                           idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"
                         }`}
                       >
@@ -308,8 +368,10 @@ export default function App() {
             {/* Status Bar */}
             <div className="bg-white border-t border-slate-200 px-4 py-1.5 flex items-center justify-between text-xs text-slate-500">
               <div className="flex items-center space-x-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>Active source: {ongletActif} — {articles.length} articles loaded</span>
+                <span className={`w-2 h-2 rounded-full ${estEnCours ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`}></span>
+                <span>
+                  Active source: {ongletActif} &bull; {estEnCours ? "Fetching update..." : `Cached (${articlesActifs.length} items)`}
+                </span>
               </div>
               <span className="text-[11px] text-slate-400 font-mono">PySide6 6.5+ &bull; Ready</span>
             </div>
@@ -321,11 +383,11 @@ export default function App() {
               <div className="flex items-center space-x-2">
                 <Terminal className="w-4 h-4 text-emerald-400" />
                 <span className="text-xs font-mono font-semibold">
-                  /GESTION_ARTICLE — SOLID & MVC Architecture
+                  /GESTION_ARTICLE — In-Memory Cache & Rotating Refresh Button
                 </span>
               </div>
               <span className="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono">
-                Threaded &bull; Extractor Factory &bull; Passive Table
+                QPainter &bull; QTimer &bull; ServiceCacheArticles
               </span>
             </div>
 
@@ -378,7 +440,7 @@ export default function App() {
                     </span>
                   </div>
                   <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-medium">
-                    Validated (&lt;130 lines)
+                    Validated (&lt;150 lines)
                   </span>
                 </div>
 
@@ -389,17 +451,17 @@ export default function App() {
                 <div className="flex-1 bg-slate-900 text-slate-100 rounded p-4 font-mono text-xs overflow-auto">
                   <div className="text-slate-500">// File: {fichiersPython[fichierSelectionne]?.chemin}</div>
                   <div className="text-slate-400 mt-2">
-                    Conforme aux règles de conception :
+                    Fonctionnalités intégrées :
                     <br />
-                    - Tableau avec Image (colonne 1), Title (colonne 2), Date (colonne 3)
+                    - Cache mémoire en session : les clics entre onglets ne font aucun appel réseau.
                     <br />
-                    - Aucune action de clic sur les éléments listés
+                    - Chargement non volontaire exécuté uniquement au démarrage de l&apos;application.
                     <br />
-                    - Respect des principes S.O.L.I.D. et D.R.Y.
+                    - Bouton d&apos;actualisation en haut à droite dans chaque onglet.
                     <br />
-                    - Pas de blocage du thread principal (QThread d&apos;extraction asynchrone)
+                    - Icône vectorielle dessinée avec QPainter animée par rotation continue pendant la mise à jour.
                     <br />
-                    - Fichiers modulaires de moins de 250 lignes (tous &le; 128 lignes)
+                    - Respect des principes S.O.L.I.D. et D.R.Y. (&lt;250 lignes par fichier).
                   </div>
                 </div>
               </div>

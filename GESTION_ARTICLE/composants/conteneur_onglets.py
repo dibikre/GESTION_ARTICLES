@@ -1,6 +1,7 @@
 """
 Composant graphique réutilisable gérant le conteneur d'onglets de navigation.
 Héberge un PanneauSourceArticles pour chaque source afin d'afficher les articles.
+Relaye les demandes d'actualisation de chaque onglet.
 """
 
 from typing import Dict, List, Optional
@@ -18,6 +19,7 @@ class ConteneurOnglets(QTabWidget):
     """
 
     onglet_change = Signal(int, str)
+    demande_actualisation = Signal(str)
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
@@ -52,6 +54,7 @@ class ConteneurOnglets(QTabWidget):
 
         for titre in liste_titres:
             panneau = PanneauSourceArticles(nom_source=titre, parent=self)
+            panneau.demande_actualisation.connect(self.demande_actualisation.emit)
             self._panneaux_sources[titre.upper()] = panneau
             self.addTab(panneau, titre)
 
