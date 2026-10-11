@@ -1,0 +1,7 @@
+{
+  "name": "App GUI Python Gestion Articles",
+  "description": "Application GUI Python Gestion Articles",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
