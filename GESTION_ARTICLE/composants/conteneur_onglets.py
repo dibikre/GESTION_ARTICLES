@@ -1,22 +1,27 @@
 """
 Composant graphique réutilisable gérant le conteneur d'onglets de navigation.
+Héberge un PanneauSourceArticles pour chaque source afin d'afficher les articles.
 """
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QTabWidget, QWidget, QVBoxLayout
+from PySide6.QtWidgets import QTabWidget, QWidget
+from GESTION_ARTICLE.composants.panneau_source_articles import (
+    PanneauSourceArticles,
+)
 
 
 class ConteneurOnglets(QTabWidget):
     """
-    Conteneur d'onglets personnalisable positionné en haut à gauche.
-    Fournit des pages sans contenu comme requis par la spécification.
+    Conteneur d'onglets positionné en haut à gauche.
+    Associe chaque onglet de source à son PanneauSourceArticles dédié.
     """
 
     onglet_change = Signal(int, str)
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
+        self._panneaux_sources: Dict[str, PanneauSourceArticles] = {}
         self._initialiser_proprietes()
         self._connecter_signaux()
 
@@ -38,28 +43,23 @@ class ConteneurOnglets(QTabWidget):
 
     def initialiser_onglets_sources(self, liste_titres: List[str]) -> None:
         """
-        Crée les onglets demandés avec des conteneurs vides (sans contenu).
+        Crée les onglets demandés en leur associant leur panneau de contenu tabulaire.
 
         :param liste_titres: Liste des titres des onglets à initialiser.
         """
         self.clear()
+        self._panneaux_sources.clear()
+
         for titre in liste_titres:
-            self.ajouter_onglet_vide(titre)
+            panneau = PanneauSourceArticles(nom_source=titre, parent=self)
+            self._panneaux_sources[titre.upper()] = panneau
+            self.addTab(panneau, titre)
 
-    def ajouter_onglet_vide(self, titre: str) -> QWidget:
-        """
-        Ajoute un nouvel onglet avec un widget vierge.
-
-        :param titre: Nom affiché dans l'onglet.
-        :return: Le widget vide associé à l'onglet.
-        """
-        panneau_vide = QWidget()
-        mise_en_page = QVBoxLayout(panneau_vide)
-        mise_en_page.setContentsMargins(16, 16, 16, 16)
-        panneau_vide.setLayout(mise_en_page)
-
-        self.addTab(panneau_vide, titre)
-        return panneau_vide
+    def obtenir_panneau_source(
+        self, nom_source: str
+    ) -> Optional[PanneauSourceArticles]:
+        """Retourne le panneau de contenu d'une source spécifique."""
+        return self._panneaux_sources.get(nom_source.upper())
 
     def obtenir_titre_actif(self) -> str:
         """Retourne le titre de l'onglet actuellement sélectionné."""
