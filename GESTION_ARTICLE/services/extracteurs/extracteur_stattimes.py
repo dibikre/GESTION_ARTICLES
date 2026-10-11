@@ -1,12 +1,15 @@
 """
-Extracteur d'articles pour la source STATTIMES.
-Délègue la récupération au module spécialisé stattimes_scraper.
+Extracteur d'articles pour la source STATTIMES avec support de pagination.
 """
 
 import os
 import sys
 from typing import List
 from GESTION_ARTICLE.modeles.modele_article import ModeleArticle
+from GESTION_ARTICLE.modeles.modele_pagination import ModelePagination
+from GESTION_ARTICLE.modeles.resultat_extraction_articles import (
+    ResultatExtractionArticles,
+)
 from GESTION_ARTICLE.services.extracteurs.interface_extracteur import (
     InterfaceExtracteurArticles,
 )
@@ -14,7 +17,7 @@ from GESTION_ARTICLE.services.service_journalisation import ServiceJournalisatio
 
 
 class ExtracteurStatTimes(InterfaceExtracteurArticles):
-    """Implémentation concrète de l'extracteur pour STAT Times."""
+    """Implémentation de l'extracteur avec pagination pour STAT Times."""
 
     def __init__(self) -> None:
         self._journal = ServiceJournalisation.obtenir_journal("ExtracteurStatTimes")
@@ -31,9 +34,12 @@ class ExtracteurStatTimes(InterfaceExtracteurArticles):
     def obtenir_nom_source(self) -> str:
         return self._nom_source
 
-    def recuperer_articles(self, numero_page: int = 1) -> List[ModeleArticle]:
-        self._journal.info("Fetching articles for STAT Times (page %d)", numero_page)
+    def recuperer_articles(
+        self, numero_page: int = 1
+    ) -> ResultatExtractionArticles:
+        self._journal.info("Fetching STAT Times articles for page %d", numero_page)
         articles: List[ModeleArticle] = []
+        a_suivante = True
 
         try:
             import requests
@@ -44,7 +50,11 @@ class ExtracteurStatTimes(InterfaceExtracteurArticles):
                     session=session,
                     page=numero_page,
                 )
-                donnees_brutes = resultat[0] if isinstance(resultat, tuple) else resultat
+
+            if isinstance(resultat, tuple):
+                donnees_brutes, a_suivante = resultat
+            else:
+                donnees_brutes = resultat
 
             for element in donnees_brutes:
                 articles.append(
@@ -55,11 +65,21 @@ class ExtracteurStatTimes(InterfaceExtracteurArticles):
                         url_source=element.get("url"),
                     )
                 )
-            self._journal.info("Extracted %d articles from STAT Times", len(articles))
 
+            self._journal.info(
+                "Extracted %d articles from STAT Times (page %d, has_next=%s)",
+                len(articles),
+                numero_page,
+                str(a_suivante),
+            )
         except Exception as erreur:
             self._journal.error(
                 "Error extracting articles from STAT Times: %s", str(erreur)
             )
 
-        return articles
+        pagination = ModelePagination(
+            page_courante=numero_page,
+            page_maximale=None,
+            a_page_suivante=a_suivante,
+        )
+        return ResultatExtractionArticles(articles=articles, pagination=pagination)

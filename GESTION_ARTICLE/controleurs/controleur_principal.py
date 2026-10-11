@@ -1,7 +1,6 @@
 """
 Contrôleur principal orchestrant les interactions utilisateur et le flux de données.
-Intègre le ServiceCacheArticles pour éviter tout appel réseau intempestif lors des clics.
-Gère les mises à jour volontaires avec rotation de l'icône d'actualisation.
+Gère la navigation par onglet, la pagination au pied de chaque tableau et le cache par page.
 """
 
 from typing import Dict, List, Optional
@@ -14,8 +13,10 @@ from GESTION_ARTICLE.configuration.configuration_application import (
     MESSAGE_ONGLET_SELECTIONNE,
     MESSAGE_STATUT_PRET,
 )
-from GESTION_ARTICLE.modeles.modele_article import ModeleArticle
 from GESTION_ARTICLE.modeles.modele_source_article import ModeleSourceArticle
+from GESTION_ARTICLE.modeles.resultat_extraction_articles import (
+    ResultatExtractionArticles,
+)
 from GESTION_ARTICLE.services.extracteurs.fabrique_extracteurs import (
     FabriqueExtracteurs,
 )
@@ -27,9 +28,10 @@ from GESTION_ARTICLE.services.tache_chargement_articles import (
 
 
 class ControleurPrincipal(QObject):
-    """Orchestre la navigation entre onglets, le cache et les mises à jour manuelles."""
+    """Orchestre la navigation entre onglets, la pagination et le cache multi-pages."""
 
     articles_receptionnes = Signal(str, list)
+    resultat_receptionne = Signal(str, object)
     statut_modifie = Signal(str)
     etat_chargement_change = Signal(str, bool)
 
@@ -62,11 +64,7 @@ class ControleurPrincipal(QObject):
 
     def traiter_selection_onglet(self, index: int, titre: str) -> str:
         """
-        Traite le changement d'onglet sans déclencher d'appel réseau si déjà en cache.
-
-        :param index: Index de l'onglet sélectionné.
-        :param titre: Nom de la source sélectionnée.
-        :return: Message de statut pour la barre d'état.
+        Traite le changement d'onglet et consulte le cache de la page 1.
         """
         self._journal.info("Tab selected: index=%d, source='%s'", index, titre)
         source_trouvee = next(
@@ -75,34 +73,57 @@ class ControleurPrincipal(QObject):
         if source_trouvee:
             self._source_active = source_trouvee
 
-            # Consultation prioritaire du cache de session
-            if self._service_cache.est_en_cache(titre):
-                articles = self._service_cache.obtenir_articles(titre) or []
-                self.articles_receptionnes.emit(titre, articles)
-                return f"{MESSAGE_ONGLET_SELECTIONNE}{titre} (Cached: {len(articles)} items)"
+            # Consultation prioritaire du cache de session pour la page 1
+            if self._service_cache.est_en_cache(titre, 1):
+                resultat = self._service_cache.obtenir_resultat(titre, 1)
+                if resultat:
+                    self.resultat_receptionne.emit(titre, resultat)
+                    self.articles_receptionnes.emit(titre, resultat.articles)
+                    return f"{MESSAGE_ONGLET_SELECTIONNE}{titre} (Cached: {len(resultat.articles)} items)"
 
-            # Si non présent (premier affichage de l'onglet lors de la session)
-            self._lancer_tache_extraction(titre)
+            # Premier affichage de la session pour cet onglet
+            self._lancer_tache_extraction(titre, numero_page=1)
             return f"{MESSAGE_ONGLET_SELECTIONNE}{titre}"
 
         return MESSAGE_STATUT_PRET
 
+    def changer_page_source(self, nom_source: str, nouvelle_page: int) -> None:
+        """
+        Bascule vers une autre page pour la source indiquée avec vérification du cache.
+        """
+        self._journal.info(
+            "Page navigation requested: source='%s', page=%d",
+            nom_source,
+            nouvelle_page,
+        )
+
+        # Si la page demandée est déjà en mémoire, retour instantané
+        if self._service_cache.est_en_cache(nom_source, nouvelle_page):
+            resultat = self._service_cache.obtenir_resultat(nom_source, nouvelle_page)
+            if resultat:
+                self.resultat_receptionne.emit(nom_source, resultat)
+                self.articles_receptionnes.emit(nom_source, resultat.articles)
+                self.statut_modifie.emit(
+                    f"{nom_source} — Page {nouvelle_page} (Loaded from cache)"
+                )
+                return
+
+        # Sinon, extraction asynchrone de la page ciblée
+        self._lancer_tache_extraction(nom_source, numero_page=nouvelle_page)
+
     def actualiser_source(self, nom_source: str) -> None:
         """
-        Déclenche une mise à jour volontaire par appel de récupération via l'icône.
-        Invalide le cache pour cette source et active l'icône rotative.
-
-        :param nom_source: Nom de la source à rafraîchir.
+        Déclenche une mise à jour manuelle : vide le cache de la source et recharge la page 1.
         """
         self._journal.info("Manual refresh requested for source: %s", nom_source)
         self._service_cache.invalider_source(nom_source)
-        self._lancer_tache_extraction(nom_source)
+        self._lancer_tache_extraction(nom_source, numero_page=1)
 
-    def _lancer_tache_extraction(self, nom_source: str) -> None:
-        """Lance l'extraction en arrière-plan et signale le début du chargement."""
-        cle = nom_source.upper()
-        if cle in self._taches_actives and self._taches_actives[cle].isRunning():
-            self._journal.info("Extraction already running for %s", nom_source)
+    def _lancer_tache_extraction(self, nom_source: str, numero_page: int = 1) -> None:
+        """Lance l'extraction en arrière-plan d'une page pour une source."""
+        cle_tache = f"{nom_source.upper()}_P{numero_page}"
+        if cle_tache in self._taches_actives and self._taches_actives[cle_tache].isRunning():
+            self._journal.info("Task already active for %s (page %d)", nom_source, numero_page)
             return
 
         extracteur = FabriqueExtracteurs.obtenir_extracteur(nom_source)
@@ -110,36 +131,42 @@ class ControleurPrincipal(QObject):
             self._journal.warning("No extractor available for: %s", nom_source)
             return
 
-        # Notification de début de chargement pour activer l'icône rotative
         self.etat_chargement_change.emit(nom_source, True)
-        self.statut_modifie.emit(f"{MESSAGE_CHARGEMENT_EN_COURS}{nom_source}...")
+        self.statut_modifie.emit(
+            f"{MESSAGE_CHARGEMENT_EN_COURS}{nom_source} (Page {numero_page})..."
+        )
 
-        tache = TacheChargementArticles(extracteur=extracteur, parent=self)
-        tache.articles_charges.connect(self._sur_articles_charges)
+        tache = TacheChargementArticles(
+            extracteur=extracteur, numero_page=numero_page, parent=self
+        )
+        tache.resultat_charge.connect(self._sur_resultat_charge)
         tache.erreur_survenue.connect(self._sur_erreur_chargement)
-        self._taches_actives[cle] = tache
+        self._taches_actives[cle_tache] = tache
         tache.start()
 
-    def _sur_articles_charges(self, nom_source: str, articles: List[ModeleArticle]) -> None:
-        """Enregistre dans le cache et stoppe l'animation rotative."""
-        cle = nom_source.upper()
-        self._service_cache.mettre_en_cache(nom_source, articles)
-        if cle in self._taches_actives:
-            del self._taches_actives[cle]
+    def _sur_resultat_charge(
+        self, nom_source: str, resultat: ResultatExtractionArticles
+    ) -> None:
+        """Enregistre le résultat de page dans le cache et met à jour l'interface."""
+        num_page = resultat.pagination.page_courante
+        cle_tache = f"{nom_source.upper()}_P{num_page}"
+        if cle_tache in self._taches_actives:
+            del self._taches_actives[cle_tache]
 
+        self._service_cache.mettre_en_cache(nom_source, resultat, num_page)
         self.etat_chargement_change.emit(nom_source, False)
-        self.articles_receptionnes.emit(nom_source, articles)
+        self.resultat_receptionne.emit(nom_source, resultat)
+        self.articles_receptionnes.emit(nom_source, resultat.articles)
 
-        message = f"{len(articles)}{MESSAGE_CHARGEMENT_SUCCES}{nom_source}"
+        message = (
+            f"{len(resultat.articles)}{MESSAGE_CHARGEMENT_SUCCES}{nom_source} "
+            f"({resultat.pagination.texte_affichage()})"
+        )
         self.statut_modifie.emit(message)
         self._journal.info(message)
 
     def _sur_erreur_chargement(self, nom_source: str, message_erreur: str) -> None:
-        """Arrête l'animation rotative et affiche l'erreur."""
-        cle = nom_source.upper()
-        if cle in self._taches_actives:
-            del self._taches_actives[cle]
-
+        """Stoppe l'état de chargement et notifie l'erreur."""
         self.etat_chargement_change.emit(nom_source, False)
         message = f"{MESSAGE_ERREUR_CHARGEMENT}{nom_source}: {message_erreur}"
         self.statut_modifie.emit(message)

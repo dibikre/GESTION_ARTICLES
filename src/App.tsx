@@ -17,175 +17,205 @@ interface ArticleData {
   image_url: string;
 }
 
-// Données d'articles avec URLs fiables et haute disponibilité pour le défilement
-const DONNEES_INITIALES: Record<NomOnglet, ArticleData[]> = {
-  STATTIMES: [
-    {
-      title: "Cathay Cargo operates first commercial flight into Western Sydney International Airport",
-      date: "2026-10-10",
-      image_url: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "TIACA announces winners of the 2026 Air Cargo Sustainability Awards",
-      date: "2026-10-09",
-      image_url: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Lufthansa Cargo expands transpacific network with direct freighter connections",
-      date: "2026-10-08",
-      image_url: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Etihad Cargo posts record third-quarter tonnage driven by pharma and tech demand",
-      date: "2026-10-07",
-      image_url: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Emirates SkyCargo adds two Boeing 777Fs to bolster global scheduled capacity",
-      date: "2026-10-06",
-      image_url: "https://images.unsplash.com/photo-1520437358207-323b43b50729?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Singapore Airlines Cargo reports strong bellyhold volume growth across Asia-Pacific routes",
-      date: "2026-10-05",
-      image_url: "https://images.unsplash.com/photo-1508873696983-2df5293cb32f?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "IATA air freight pulse reveals resilient e-commerce demand ahead of peak shipping season",
-      date: "2026-10-04",
-      image_url: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=360&auto=format&fit=crop&q=70",
-    },
-  ],
-  SUPPLYCHAINDIVE: [
-    {
-      title: "Port of Los Angeles cargo volume surges 14% as shippers front-load holiday goods",
-      date: "2026-10-09",
-      image_url: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "US East Coast dockworkers and maritime alliance resume talks on port automation",
-      date: "2026-10-08",
-      image_url: "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "FedEx deploys autonomous electric yard trucks across major Midwest ground hubs",
-      date: "2026-10-06",
-      image_url: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Semiconductor supply chains face new export restrictions ahead of global reviews",
-      date: "2026-10-05",
-      image_url: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Warehouse vacancy rates level out as 3PL operators optimize regional footprint",
-      date: "2026-10-04",
-      image_url: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Automakers accelerate nearshoring supplier contracts in northern Mexico industrial corridors",
-      date: "2026-10-03",
-      image_url: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=360&auto=format&fit=crop&q=70",
-    },
-  ],
-  AIRCARGOWEEK: [
-    {
-      title: "Air France KLM Martinair Cargo secures CEIV Lithium Battery re-certification",
-      date: "2026-10-09",
-      image_url: "https://images.unsplash.com/photo-1508873696983-2df5293cb32f?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Chapman Freeborn appoints regional vice president for Europe, Middle East and Africa",
-      date: "2026-10-08",
-      image_url: "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Worldwide Flight Services opens state-of-the-art cold chain center at Liege Airport",
-      date: "2026-10-07",
-      image_url: "https://images.unsplash.com/photo-1586528116493-a029325540fa?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Cargolux marks milestone anniversary with special livery on flagship Boeing 747-8F",
-      date: "2026-10-06",
-      image_url: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Silk Way West Airlines ramps up transatlantic scheduled frequencies out of Baku",
-      date: "2026-10-05",
-      image_url: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Brussels Airport reports continuous pharma growth following terminal digital enhancements",
-      date: "2026-10-04",
-      image_url: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?w=360&auto=format&fit=crop&q=70",
-    },
-  ],
-  FREIGHTWAVES: [
-    {
-      title: "Truckload tender rejection rates tick higher as regional freight markets tighten",
-      date: "2026-10-09",
-      image_url: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Class 1 railroads report mixed rail traffic metrics amid fluctuating intermodal flows",
-      date: "2026-10-08",
-      image_url: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Diesel fuel prices drop for third straight week providing relief to carrier margins",
-      date: "2026-10-07",
-      image_url: "https://images.unsplash.com/photo-1527018607616-a9f8f413bf2a?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Dry van spot rates stabilize following seasonal consumer goods inventory restocking",
-      date: "2026-10-06",
-      image_url: "https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Border crossing processing times improve with newly deployed automated radiation portals",
-      date: "2026-10-05",
-      image_url: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=360&auto=format&fit=crop&q=70",
-    },
-  ],
-  "SEATRADE-MARITIME": [
-    {
-      title: "Global container fleet crosses 30 million TEU milestone amidst rapid newbuilding pace",
-      date: "2026-10-09",
-      image_url: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "CMA CGM orders next-generation dual-fuel methanol container vessels from DSIC",
-      date: "2026-10-08",
-      image_url: "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Panama Canal increases daily transit slots to 36 as reservoir water levels stabilize",
-      date: "2026-10-07",
-      image_url: "https://images.unsplash.com/photo-1505705694340-019e1e335916?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Port of Singapore achieves record maritime bunkering volumes with low-carbon biofuels",
-      date: "2026-10-06",
-      image_url: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=360&auto=format&fit=crop&q=70",
-    },
-    {
-      title: "Dry bulk market sentiments rebound as grain export demand picks up momentum",
-      date: "2026-10-05",
-      image_url: "https://images.unsplash.com/photo-1508873696983-2df5293cb32f?w=360&auto=format&fit=crop&q=70",
-    },
-  ],
+// Articles découpés par page pour simuler la pagination de chaque source
+const ARTICLES_PAR_PAGE: Record<NomOnglet, Record<number, ArticleData[]>> = {
+  STATTIMES: {
+    1: [
+      {
+        title: "Cathay Cargo operates first commercial flight into Western Sydney International Airport",
+        date: "2026-10-10",
+        image_url: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "TIACA announces winners of the 2026 Air Cargo Sustainability Awards",
+        date: "2026-10-09",
+        image_url: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "Lufthansa Cargo expands transpacific network with direct freighter connections",
+        date: "2026-10-08",
+        image_url: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "Etihad Cargo posts record third-quarter tonnage driven by pharma demand",
+        date: "2026-10-07",
+        image_url: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?w=360&auto=format&fit=crop&q=70",
+      },
+    ],
+    2: [
+      {
+        title: "Emirates SkyCargo adds two Boeing 777Fs to bolster global scheduled capacity",
+        date: "2026-10-06",
+        image_url: "https://images.unsplash.com/photo-1520437358207-323b43b50729?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "Singapore Airlines Cargo reports strong bellyhold volume growth across Asia-Pacific routes",
+        date: "2026-10-05",
+        image_url: "https://images.unsplash.com/photo-1508873696983-2df5293cb32f?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "IATA air freight pulse reveals resilient e-commerce demand ahead of peak shipping season",
+        date: "2026-10-04",
+        image_url: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=360&auto=format&fit=crop&q=70",
+      },
+    ],
+  },
+  SUPPLYCHAINDIVE: {
+    1: [
+      {
+        title: "Port of Los Angeles cargo volume surges 14% as shippers front-load holiday goods",
+        date: "2026-10-09",
+        image_url: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "US East Coast dockworkers and maritime alliance resume talks on port automation",
+        date: "2026-10-08",
+        image_url: "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "FedEx deploys autonomous electric yard trucks across major Midwest ground hubs",
+        date: "2026-10-06",
+        image_url: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=360&auto=format&fit=crop&q=70",
+      },
+    ],
+    2: [
+      {
+        title: "Semiconductor supply chains face new export restrictions ahead of global reviews",
+        date: "2026-10-05",
+        image_url: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "Warehouse vacancy rates level out as 3PL operators optimize regional footprint",
+        date: "2026-10-04",
+        image_url: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "Automakers accelerate nearshoring supplier contracts in northern Mexico corridors",
+        date: "2026-10-03",
+        image_url: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=360&auto=format&fit=crop&q=70",
+      },
+    ],
+  },
+  AIRCARGOWEEK: {
+    1: [
+      {
+        title: "Air France KLM Martinair Cargo secures CEIV Lithium Battery re-certification",
+        date: "2026-10-09",
+        image_url: "https://images.unsplash.com/photo-1508873696983-2df5293cb32f?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "Chapman Freeborn appoints regional vice president for Europe, Middle East and Africa",
+        date: "2026-10-08",
+        image_url: "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "Worldwide Flight Services opens state-of-the-art cold chain center at Liege Airport",
+        date: "2026-10-07",
+        image_url: "https://images.unsplash.com/photo-1586528116493-a029325540fa?w=360&auto=format&fit=crop&q=70",
+      },
+    ],
+    2: [
+      {
+        title: "Cargolux marks milestone anniversary with special livery on flagship Boeing 747-8F",
+        date: "2026-10-06",
+        image_url: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "Silk Way West Airlines ramps up transatlantic scheduled frequencies out of Baku",
+        date: "2026-10-05",
+        image_url: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=360&auto=format&fit=crop&q=70",
+      },
+    ],
+  },
+  FREIGHTWAVES: {
+    1: [
+      {
+        title: "Truckload tender rejection rates tick higher as regional freight markets tighten",
+        date: "2026-10-09",
+        image_url: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "Class 1 railroads report mixed rail traffic metrics amid fluctuating intermodal flows",
+        date: "2026-10-08",
+        image_url: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "Diesel fuel prices drop for third straight week providing relief to carrier margins",
+        date: "2026-10-07",
+        image_url: "https://images.unsplash.com/photo-1527018607616-a9f8f413bf2a?w=360&auto=format&fit=crop&q=70",
+      },
+    ],
+    2: [
+      {
+        title: "Dry van spot rates stabilize following seasonal consumer goods inventory restocking",
+        date: "2026-10-06",
+        image_url: "https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "Border crossing processing times improve with newly deployed automated radiation portals",
+        date: "2026-10-05",
+        image_url: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=360&auto=format&fit=crop&q=70",
+      },
+    ],
+  },
+  "SEATRADE-MARITIME": {
+    1: [
+      {
+        title: "Global container fleet crosses 30 million TEU milestone amidst rapid newbuilding pace",
+        date: "2026-10-09",
+        image_url: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "CMA CGM orders next-generation dual-fuel methanol container vessels from DSIC",
+        date: "2026-10-08",
+        image_url: "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "Panama Canal increases daily transit slots to 36 as reservoir water levels stabilize",
+        date: "2026-10-07",
+        image_url: "https://images.unsplash.com/photo-1505705694340-019e1e335916?w=360&auto=format&fit=crop&q=70",
+      },
+    ],
+    2: [
+      {
+        title: "Port of Singapore achieves record maritime bunkering volumes with low-carbon biofuels",
+        date: "2026-10-06",
+        image_url: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=360&auto=format&fit=crop&q=70",
+      },
+      {
+        title: "Dry bulk market sentiments rebound as grain export demand picks up momentum",
+        date: "2026-10-05",
+        image_url: "https://images.unsplash.com/photo-1508873696983-2df5293cb32f?w=360&auto=format&fit=crop&q=70",
+      },
+    ],
+  },
+};
+
+// Métadonnées de pagination par plateforme
+const PAGES_MAX_SOURCES: Record<NomOnglet, number> = {
+  STATTIMES: 24,
+  SUPPLYCHAINDIVE: 18,
+  AIRCARGOWEEK: 12,
+  FREIGHTWAVES: 35,
+  "SEATRADE-MARITIME": 25,
 };
 
 export default function App() {
   const [ongletActif, setOngletActif] = useState<NomOnglet>("STATTIMES");
   const [vueArchitecture, setVueArchitecture] = useState(false);
-  const [fichierSelectionne, setFichierSelectionne] = useState("service_chargement_image.py");
+  const [fichierSelectionne, setFichierSelectionne] = useState("barre_pagination.py");
   const [copie, setCopie] = useState(false);
 
-  // Erreurs d'image gérées avec fallback
-  const [imagesEnErreur, setImagesEnErreur] = useState<Record<string, boolean>>({});
+  // Numéro de page actuel par source
+  const [pagesCourantes, setPagesCourantes] = useState<Record<NomOnglet, number>>({
+    STATTIMES: 1,
+    SUPPLYCHAINDIVE: 1,
+    AIRCARGOWEEK: 1,
+    FREIGHTWAVES: 1,
+    "SEATRADE-MARITIME": 1,
+  });
 
-  const [cacheArticles] = useState<Record<NomOnglet, ArticleData[]>>(() => DONNEES_INITIALES);
+  const [imagesEnErreur, setImagesEnErreur] = useState<Record<string, boolean>>({});
 
   const [enActualisation, setEnActualisation] = useState<Record<NomOnglet, boolean>>({
     STATTIMES: false,
@@ -195,48 +225,45 @@ export default function App() {
     "SEATRADE-MARITIME": false,
   });
 
-  const [dateDerniereMaj, setDateDerniereMaj] = useState<Record<NomOnglet, string>>({
-    STATTIMES: "Session start",
-    SUPPLYCHAINDIVE: "Session start",
-    AIRCARGOWEEK: "Session start",
-    FREIGHTWAVES: "Session start",
-    "SEATRADE-MARITIME": "Session start",
-  });
+  const changerPage = (source: NomOnglet, direction: number) => {
+    setPagesCourantes((prev) => {
+      const pageActuelle = prev[source];
+      const maxPage = PAGES_MAX_SOURCES[source];
+      const nouvellePage = Math.max(1, Math.min(maxPage, pageActuelle + direction));
+      return { ...prev, [source]: nouvellePage };
+    });
+  };
 
   const declencherActualisation = (source: NomOnglet) => {
     if (enActualisation[source]) return;
-
     setEnActualisation((prev) => ({ ...prev, [source]: true }));
 
     setTimeout(() => {
       setEnActualisation((prev) => ({ ...prev, [source]: false }));
-      setDateDerniereMaj((prev) => ({
-        ...prev,
-        [source]: new Date().toLocaleTimeString(),
-      }));
+      setPagesCourantes((prev) => ({ ...prev, [source]: 1 }));
     }, 1200);
   };
 
   const fichiersPython: Record<string, { chemin: string; description: string }> = {
-    "service_chargement_image.py": {
-      chemin: "/GESTION_ARTICLE/services/service_chargement_image.py",
-      description: "Non-blocking async image loader with HTTP User-Agent headers and observer registry for scroll",
+    "barre_pagination.py": {
+      chemin: "/GESTION_ARTICLE/composants/barre_pagination.py",
+      description: "Pagination bar at the foot of table with Previous, Page indicator and Next buttons",
     },
-    "tableau_articles.py": {
-      chemin: "/GESTION_ARTICLE/composants/tableau_articles.py",
-      description: "Passive QTableWidget with ScrollPerPixel and guaranteed thumbnail update on scroll",
+    "modele_pagination.py": {
+      chemin: "/GESTION_ARTICLE/modeles/modele_pagination.py",
+      description: "Encapsulates page number, max page, and navigation bounds",
     },
-    "service_cache_articles.py": {
-      chemin: "/GESTION_ARTICLE/services/service_cache_articles.py",
-      description: "In-memory session cache ensuring instant tab switches without network calls",
-    },
-    "bouton_actualisation.py": {
-      chemin: "/GESTION_ARTICLE/composants/bouton_actualisation.py",
-      description: "QAbstractButton with custom QPainter rotating vector icon (no emoji, no unicode)",
+    "resultat_extraction_articles.py": {
+      chemin: "/GESTION_ARTICLE/modeles/resultat_extraction_articles.py",
+      description: "Container model returning both articles list and pagination metadata from scrapers",
     },
     "panneau_source_articles.py": {
       chemin: "/GESTION_ARTICLE/composants/panneau_source_articles.py",
-      description: "Tab content view placing the rotating refresh icon at the top right",
+      description: "Hosts the table with refresh button at top right and pagination bar at the foot",
+    },
+    "service_cache_articles.py": {
+      chemin: "/GESTION_ARTICLE/services/service_cache_articles.py",
+      description: "Indexed by (source, page) ensuring zero-delay navigation between visited pages",
     },
   };
 
@@ -246,7 +273,12 @@ export default function App() {
     setTimeout(() => setCopie(false), 2000);
   };
 
-  const articlesActifs = cacheArticles[ongletActif] || [];
+  const pageActuelle = pagesCourantes[ongletActif];
+  const maxPage = PAGES_MAX_SOURCES[ongletActif];
+  const articlesActifs =
+    ARTICLES_PAR_PAGE[ongletActif]?.[pageActuelle] ||
+    ARTICLES_PAR_PAGE[ongletActif]?.[1] ||
+    [];
   const estEnCours = enActualisation[ongletActif];
 
   return (
@@ -298,7 +330,7 @@ export default function App() {
       <main className="flex-1 p-6 flex flex-col items-center justify-start">
         {!vueArchitecture ? (
           /* Desktop PySide6 Window */
-          <div className="w-full max-w-5xl bg-white rounded-lg shadow-md border border-slate-300 flex flex-col overflow-hidden min-h-[640px]">
+          <div className="w-full max-w-5xl bg-white rounded-lg shadow-md border border-slate-300 flex flex-col overflow-hidden min-h-[660px]">
             {/* Desktop Window Titlebar */}
             <div className="bg-slate-200 border-b border-slate-300 px-4 py-2.5 flex items-center justify-between select-none">
               <div className="flex items-center space-x-2">
@@ -342,7 +374,7 @@ export default function App() {
                     <span className="font-semibold text-slate-800">{ongletActif}</span>
                     <span className="text-slate-400">&bull;</span>
                     <span className="text-slate-500">
-                      {estEnCours ? "Updating articles from source..." : `${articlesActifs.length} articles in cache`}
+                      {estEnCours ? "Loading page..." : `${articlesActifs.length} articles (Page ${pageActuelle} of ${maxPage})`}
                     </span>
                     <span className="bg-emerald-50 text-emerald-700 text-[10px] font-medium px-2 py-0.5 rounded border border-emerald-200">
                       Cached
@@ -351,9 +383,6 @@ export default function App() {
 
                   {/* Top-Right Refresh Button with Rotating Icon */}
                   <div className="flex items-center space-x-2">
-                    <span className="text-[11px] text-slate-400 font-mono">
-                      Last: {dateDerniereMaj[ongletActif]}
-                    </span>
                     <button
                       onClick={() => declencherActualisation(ongletActif)}
                       disabled={estEnCours}
@@ -373,8 +402,8 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Table Component with Guaranteed Smooth Scrolling */}
-                <div className="flex-1 border border-slate-200 rounded overflow-hidden flex flex-col max-h-[460px]">
+                {/* Table Component */}
+                <div className="flex-1 border border-slate-200 rounded overflow-hidden flex flex-col max-h-[380px]">
                   {/* Table Header: 3 columns required (Image, Title, Date) */}
                   <div className="grid grid-cols-12 bg-slate-100 border-b border-slate-200 text-xs font-bold text-slate-700 select-none py-2 px-3 shrink-0">
                     <div className="col-span-2">Image</div>
@@ -382,16 +411,16 @@ export default function App() {
                     <div className="col-span-2 text-center">Date</div>
                   </div>
 
-                  {/* Table Rows — Smooth vertical scrolling with eager image loading */}
+                  {/* Table Rows */}
                   <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
                     {articlesActifs.map((art, idx) => (
                       <div
-                        key={`${ongletActif}-${idx}`}
+                        key={`${ongletActif}-p${pageActuelle}-${idx}`}
                         className={`grid grid-cols-12 items-center py-2 px-3 select-none text-xs transition-colors ${
                           idx % 2 === 0 ? "bg-white" : "bg-slate-50/60"
                         }`}
                       >
-                        {/* 1st column: Image with reliable display on scroll */}
+                        {/* 1st column: Image */}
                         <div className="col-span-2 pr-3">
                           {imagesEnErreur[art.image_url] ? (
                             <div className="w-28 h-16 rounded bg-slate-100 border border-slate-200 flex flex-col items-center justify-center text-slate-400 text-[10px]">
@@ -429,6 +458,29 @@ export default function App() {
                     ))}
                   </div>
                 </div>
+
+                {/* Barre de pagination au pied du tableau */}
+                <div className="mt-3 pt-2 border-t border-slate-200 flex items-center justify-center space-x-3 select-none">
+                  <button
+                    onClick={() => changerPage(ongletActif, -1)}
+                    disabled={pageActuelle <= 1 || estEnCours}
+                    className="px-3.5 py-1.5 text-xs font-medium rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 transition"
+                  >
+                    Previous
+                  </button>
+
+                  <span className="text-xs font-semibold text-slate-700 font-mono px-3">
+                    Page {pageActuelle} of {maxPage}
+                  </span>
+
+                  <button
+                    onClick={() => changerPage(ongletActif, 1)}
+                    disabled={pageActuelle >= maxPage || estEnCours}
+                    className="px-3.5 py-1.5 text-xs font-medium rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 transition"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -437,7 +489,7 @@ export default function App() {
               <div className="flex items-center space-x-2">
                 <span className={`w-2 h-2 rounded-full ${estEnCours ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`}></span>
                 <span>
-                  Active source: {ongletActif} &bull; {estEnCours ? "Fetching update..." : `Cached (${articlesActifs.length} items)`}
+                  Active source: {ongletActif} &bull; Page {pageActuelle} &bull; {estEnCours ? "Fetching page..." : `Cached (${articlesActifs.length} items)`}
                 </span>
               </div>
               <span className="text-[11px] text-slate-400 font-mono">PySide6 6.5+ &bull; Ready</span>
@@ -445,16 +497,16 @@ export default function App() {
           </div>
         ) : (
           /* Architecture & Code Viewer */
-          <div className="w-full max-w-5xl bg-white rounded-lg shadow-md border border-slate-300 overflow-hidden flex flex-col min-h-[640px]">
+          <div className="w-full max-w-5xl bg-white rounded-lg shadow-md border border-slate-300 overflow-hidden flex flex-col min-h-[660px]">
             <div className="bg-slate-900 text-slate-100 px-4 py-3 flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Terminal className="w-4 h-4 text-emerald-400" />
                 <span className="text-xs font-mono font-semibold">
-                  /GESTION_ARTICLE — Fixed Scroll Image Loading
+                  /GESTION_ARTICLE — Pagination at the Foot of the Table
                 </span>
               </div>
               <span className="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono">
-                User-Agent Headers &bull; Observer Registry &bull; ScrollPerPixel
+                BarrePagination &bull; Multi-page Cache &bull; ModelePagination
               </span>
             </div>
 
@@ -507,7 +559,7 @@ export default function App() {
                     </span>
                   </div>
                   <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-medium">
-                    Validated (&lt;160 lines)
+                    Validated (&lt;180 lines)
                   </span>
                 </div>
 
@@ -518,15 +570,23 @@ export default function App() {
                 <div className="flex-1 bg-slate-900 text-slate-100 rounded p-4 font-mono text-xs overflow-auto">
                   <div className="text-slate-500">// File: {fichiersPython[fichierSelectionne]?.chemin}</div>
                   <div className="text-slate-400 mt-2">
-                    Correction des images au défilement (scroll) :
+                    Implémentation de la pagination au pied de chaque tableau :
                     <br />
-                    1. En-têtes HTTP (User-Agent) ajoutés aux requêtes d&apos;images pour éviter les rejets 403 Forbidden des serveurs CDN/Cloudflare.
+                    1. Analyse des scrapers de chaque source :
                     <br />
-                    2. Registre central d&apos;observateurs : les cellules défilées reçoivent toutes leur pixmap dès la fin du téléchargement asynchrone.
+                    - Air Cargo Week : paramètre &quot;jet_paged&quot; avec détection de fin de liste
                     <br />
-                    3. Mode de défilement fluide ScrollPerPixel évitant le masquage intempestif des widgets de cellules.
+                    - FreightWaves : pagination /page/N avec extraction de la dernière page
                     <br />
-                    4. Normalisation des URLs (gestion des schémas //, https, paramètres).
+                    - Seatrade Maritime : pagination React Router avec totalCount et page
+                    <br />
+                    - STAT Times : pagination /N avec lien Next Page
+                    <br />
+                    - Supply Chain Dive : API REST avec comptage count et paramètre page
+                    <br />
+                    2. Composant BarrePagination au pied du tableau avec Previous, Page indicator et Next.
+                    <br />
+                    3. Cache indexé par (source, page) pour une navigation instantanée sans requête redondante.
                   </div>
                 </div>
               </div>

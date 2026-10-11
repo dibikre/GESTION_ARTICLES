@@ -1,11 +1,12 @@
 """
-Tâche exécutée dans un thread secondaire pour l'extraction non-bloquante des articles.
+Tâche exécutée dans un thread secondaire pour l'extraction non-bloquante avec pagination.
 Respecte la règle 16 (Threading et tâches longues).
 """
 
-from typing import List
 from PySide6.QtCore import QThread, Signal
-from GESTION_ARTICLE.modeles.modele_article import ModeleArticle
+from GESTION_ARTICLE.modeles.resultat_extraction_articles import (
+    ResultatExtractionArticles,
+)
 from GESTION_ARTICLE.services.extracteurs.interface_extracteur import (
     InterfaceExtracteurArticles,
 )
@@ -13,9 +14,9 @@ from GESTION_ARTICLE.services.service_journalisation import ServiceJournalisatio
 
 
 class TacheChargementArticles(QThread):
-    """Exécute l'extraction réseau d'articles en arrière-plan."""
+    """Exécute l'extraction réseau d'articles et de pagination en arrière-plan."""
 
-    articles_charges = Signal(str, list)
+    resultat_charge = Signal(str, object)
     erreur_survenue = Signal(str, str)
     progression_signalee = Signal(str, str)
 
@@ -31,20 +32,27 @@ class TacheChargementArticles(QThread):
         self._journal = ServiceJournalisation.obtenir_journal("TacheChargementArticles")
 
     def run(self) -> None:
-        """Point d'entrée du thread d'arrière-plan."""
+        """Point d'entrée du thread d'arrière-plan avec extraction paginée."""
         nom_source = self._extracteur.obtenir_nom_source()
-        self._journal.info("Starting background thread for source: %s", nom_source)
-        self.progression_signalee.emit(nom_source, f"Fetching articles from {nom_source}...")
+        self._journal.info(
+            "Starting background thread for source: %s (page %d)",
+            nom_source,
+            self._numero_page,
+        )
+        self.progression_signalee.emit(
+            nom_source, f"Fetching page {self._numero_page} from {nom_source}..."
+        )
 
         try:
-            articles: List[ModeleArticle] = self._extracteur.recuperer_articles(
+            resultat: ResultatExtractionArticles = self._extracteur.recuperer_articles(
                 self._numero_page
             )
-            self.articles_charges.emit(nom_source, articles)
+            self.resultat_charge.emit(nom_source, resultat)
             self._journal.info(
-                "Background fetch completed: %d articles loaded for %s",
-                len(articles),
+                "Background fetch completed: %d articles loaded for %s (page %d)",
+                len(resultat.articles),
                 nom_source,
+                self._numero_page,
             )
         except Exception as erreur:
             message_erreur = str(erreur)

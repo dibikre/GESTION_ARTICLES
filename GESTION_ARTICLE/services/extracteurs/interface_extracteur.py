@@ -1,10 +1,11 @@
 """
-Interface abstraite pour l'extraction modulaire des articles (Principe SOLID / DIP / OCP).
+Interface abstraite pour l'extraction modulaire des articles avec pagination (SOLID / DIP / OCP).
 """
 
 from abc import ABC, abstractmethod
-from typing import List
-from GESTION_ARTICLE.modeles.modele_article import ModeleArticle
+from GESTION_ARTICLE.modeles.resultat_extraction_articles import (
+    ResultatExtractionArticles,
+)
 
 
 class InterfaceExtracteurArticles(ABC):
@@ -16,11 +17,13 @@ class InterfaceExtracteurArticles(ABC):
         pass
 
     @abstractmethod
-    def recuperer_articles(self, numero_page: int = 1) -> List[ModeleArticle]:
+    def recuperer_articles(
+        self, numero_page: int = 1
+    ) -> ResultatExtractionArticles:
         """
-        Extrait et retourne la liste des articles pour la page donnée.
+        Extrait et retourne la liste des articles et la pagination pour la page donnée.
 
         :param numero_page: Numéro de la page à extraire.
-        :return: Liste d'instances de ModeleArticle.
+        :return: Instance de ResultatExtractionArticles.
         """
         pass

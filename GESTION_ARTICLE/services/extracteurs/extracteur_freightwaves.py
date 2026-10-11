@@ -1,12 +1,15 @@
 """
-Extracteur d'articles pour la source FREIGHTWAVES.
-Délègue la récupération au module spécialisé freightwaves_scraper.
+Extracteur d'articles pour la source FREIGHTWAVES avec support de pagination.
 """
 
 import os
 import sys
 from typing import List
 from GESTION_ARTICLE.modeles.modele_article import ModeleArticle
+from GESTION_ARTICLE.modeles.modele_pagination import ModelePagination
+from GESTION_ARTICLE.modeles.resultat_extraction_articles import (
+    ResultatExtractionArticles,
+)
 from GESTION_ARTICLE.services.extracteurs.interface_extracteur import (
     InterfaceExtracteurArticles,
 )
@@ -14,7 +17,7 @@ from GESTION_ARTICLE.services.service_journalisation import ServiceJournalisatio
 
 
 class ExtracteurFreightWaves(InterfaceExtracteurArticles):
-    """Implémentation concrète de l'extracteur pour FreightWaves."""
+    """Implémentation de l'extracteur avec pagination pour FreightWaves."""
 
     def __init__(self) -> None:
         self._journal = ServiceJournalisation.obtenir_journal("ExtracteurFreightWaves")
@@ -31,9 +34,12 @@ class ExtracteurFreightWaves(InterfaceExtracteurArticles):
     def obtenir_nom_source(self) -> str:
         return self._nom_source
 
-    def recuperer_articles(self, numero_page: int = 1) -> List[ModeleArticle]:
-        self._journal.info("Fetching articles for FreightWaves (page %d)", numero_page)
+    def recuperer_articles(
+        self, numero_page: int = 1
+    ) -> ResultatExtractionArticles:
+        self._journal.info("Fetching FreightWaves articles for page %d", numero_page)
         articles: List[ModeleArticle] = []
+        page_max = None
 
         try:
             import requests
@@ -44,6 +50,10 @@ class ExtracteurFreightWaves(InterfaceExtracteurArticles):
                     session=session,
                     page=numero_page,
                 )
+
+            if isinstance(resultat, tuple) and len(resultat) >= 3:
+                donnees_brutes, page_actuelle, page_max = resultat
+            else:
                 donnees_brutes = resultat[0] if isinstance(resultat, tuple) else resultat
 
             for element in donnees_brutes:
@@ -55,11 +65,21 @@ class ExtracteurFreightWaves(InterfaceExtracteurArticles):
                         url_source=element.get("url"),
                     )
                 )
-            self._journal.info("Extracted %d articles from FreightWaves", len(articles))
 
+            self._journal.info(
+                "Extracted %d articles from FreightWaves (page %d of %s)",
+                len(articles),
+                numero_page,
+                str(page_max),
+            )
         except Exception as erreur:
             self._journal.error(
                 "Error extracting articles from FreightWaves: %s", str(erreur)
             )
 
-        return articles
+        pagination = ModelePagination(
+            page_courante=numero_page,
+            page_maximale=page_max,
+            a_page_suivante=page_max is None or numero_page < page_max,
+        )
+        return ResultatExtractionArticles(articles=articles, pagination=pagination)

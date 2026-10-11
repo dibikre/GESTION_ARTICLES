@@ -1,74 +1,99 @@
 """
-Service de mise en cache mémoire des articles pour la durée de la session.
-Évite les requêtes réseau répétitives lors de la navigation entre onglets (SOLID / SRP).
+Service de mise en cache mémoire des articles et de la pagination par source et par page.
+Garantit que la navigation entre pages et onglets est instantanée sans nouvel appel réseau.
 """
 
 from typing import Dict, List, Optional
 from GESTION_ARTICLE.modeles.modele_article import ModeleArticle
+from GESTION_ARTICLE.modeles.resultat_extraction_articles import (
+    ResultatExtractionArticles,
+)
 from GESTION_ARTICLE.services.service_journalisation import ServiceJournalisation
 
 
 class ServiceCacheArticles:
-    """Gestionnaire central de cache en mémoire pour les articles de chaque source."""
+    """Gestionnaire de cache en mémoire indexé par (source, numéro de page)."""
 
     def __init__(self) -> None:
         self._journal = ServiceJournalisation.obtenir_journal("ServiceCacheArticles")
-        self._donnees_cache: Dict[str, List[ModeleArticle]] = {}
+        self._cache_pages: Dict[str, Dict[int, ResultatExtractionArticles]] = {}
 
-    def est_en_cache(self, nom_source: str) -> bool:
+    def _obtenir_cle_source(self, nom_source: str) -> str:
+        """Harmonise la clé de source en majuscules."""
+        return nom_source.upper().strip()
+
+    def est_en_cache(self, nom_source: str, numero_page: int = 1) -> bool:
         """
-        Vérifie si les articles de la source sont déjà en cache.
+        Vérifie si la page demandée est déjà en mémoire pour la source.
 
         :param nom_source: Nom de la source (ex. STATTIMES).
-        :return: True si les articles sont mémorisés, sinon False.
+        :param numero_page: Numéro de la page.
+        :return: True si en cache, sinon False.
         """
-        cle = nom_source.upper().strip()
-        return cle in self._donnees_cache
+        cle = self._obtenir_cle_source(nom_source)
+        return cle in self._cache_pages and numero_page in self._cache_pages[cle]
 
-    def obtenir_articles(self, nom_source: str) -> Optional[List[ModeleArticle]]:
+    def obtenir_resultat(
+        self, nom_source: str, numero_page: int = 1
+    ) -> Optional[ResultatExtractionArticles]:
         """
-        Récupère les articles en cache pour une source donnée.
+        Retourne le résultat d'extraction et de pagination en cache.
 
         :param nom_source: Nom de la source.
-        :return: Liste des articles ou None si non présent.
+        :param numero_page: Numéro de la page.
+        :return: Instance de ResultatExtractionArticles ou None.
         """
-        cle = nom_source.upper().strip()
-        articles = self._donnees_cache.get(cle)
-        if articles is not None:
+        cle = self._obtenir_cle_source(nom_source)
+        pages_source = self._cache_pages.get(cle)
+        if pages_source and numero_page in pages_source:
             self._journal.info(
-                "Cache HIT: %d articles retrieved for %s", len(articles), nom_source
+                "Cache HIT: Page %d found for %s", numero_page, nom_source
             )
-        else:
-            self._journal.info("Cache MISS: No cached articles for %s", nom_source)
-        return articles
+            return pages_source[numero_page]
+
+        self._journal.info(
+            "Cache MISS: Page %d not in cache for %s", numero_page, nom_source
+        )
+        return None
+
+    def obtenir_articles(
+        self, nom_source: str, numero_page: int = 1
+    ) -> Optional[List[ModeleArticle]]:
+        """Retourne uniquement la liste d'articles d'une page mise en cache."""
+        resultat = self.obtenir_resultat(nom_source, numero_page)
+        return resultat.articles if resultat else None
 
     def mettre_en_cache(
-        self, nom_source: str, articles: List[ModeleArticle]
+        self,
+        nom_source: str,
+        resultat: ResultatExtractionArticles,
+        numero_page: int = 1,
     ) -> None:
         """
-        Enregistre les articles d'une source dans le cache mémoire.
-
-        :param nom_source: Nom de la source.
-        :param articles: Liste des articles à conserver.
+        Enregistre les données et la pagination d'une page spécifique en cache.
         """
-        cle = nom_source.upper().strip()
-        self._donnees_cache[cle] = articles
+        cle = self._obtenir_cle_source(nom_source)
+        if cle not in self._cache_pages:
+            self._cache_pages[cle] = {}
+
+        self._cache_pages[cle][numero_page] = resultat
         self._journal.info(
-            "Cached %d articles successfully for %s", len(articles), nom_source
+            "Cached %d articles for %s (page %d)",
+            len(resultat.articles),
+            nom_source,
+            numero_page,
         )
 
     def invalider_source(self, nom_source: str) -> None:
         """
-        Supprime les articles d'une source spécifique du cache.
-
-        :param nom_source: Nom de la source à invalider.
+        Invalide toutes les pages en cache pour une source (lors d'une actualisation manuelle).
         """
-        cle = nom_source.upper().strip()
-        if cle in self._donnees_cache:
-            del self._donnees_cache[cle]
-            self._journal.info("Cache invalidated for source: %s", nom_source)
+        cle = self._obtenir_cle_source(nom_source)
+        if cle in self._cache_pages:
+            del self._cache_pages[cle]
+            self._journal.info("All cached pages cleared for source: %s", nom_source)
 
     def vider_tout(self) -> None:
         """Vide l'intégralité du cache."""
-        self._donnees_cache.clear()
+        self._cache_pages.clear()
         self._journal.info("Full articles cache cleared.")

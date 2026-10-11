@@ -1,12 +1,15 @@
 """
-Extracteur d'articles pour la source AIRCARGOWEEK.
-Délègue la récupération au module spécialisé aircargoweek_scraper.
+Extracteur d'articles pour la source AIRCARGOWEEK avec support de pagination.
 """
 
 import os
 import sys
 from typing import List
 from GESTION_ARTICLE.modeles.modele_article import ModeleArticle
+from GESTION_ARTICLE.modeles.modele_pagination import ModelePagination
+from GESTION_ARTICLE.modeles.resultat_extraction_articles import (
+    ResultatExtractionArticles,
+)
 from GESTION_ARTICLE.services.extracteurs.interface_extracteur import (
     InterfaceExtracteurArticles,
 )
@@ -14,7 +17,7 @@ from GESTION_ARTICLE.services.service_journalisation import ServiceJournalisatio
 
 
 class ExtracteurAirCargoWeek(InterfaceExtracteurArticles):
-    """Implémentation concrète de l'extracteur pour Air Cargo Week."""
+    """Implémentation de l'extracteur avec pagination pour Air Cargo Week."""
 
     def __init__(self) -> None:
         self._journal = ServiceJournalisation.obtenir_journal("ExtracteurAirCargoWeek")
@@ -31,9 +34,12 @@ class ExtracteurAirCargoWeek(InterfaceExtracteurArticles):
     def obtenir_nom_source(self) -> str:
         return self._nom_source
 
-    def recuperer_articles(self, numero_page: int = 1) -> List[ModeleArticle]:
-        self._journal.info("Fetching articles for Air Cargo Week (page %d)", numero_page)
+    def recuperer_articles(
+        self, numero_page: int = 1
+    ) -> ResultatExtractionArticles:
+        self._journal.info("Fetching Air Cargo Week articles for page %d", numero_page)
         articles: List[ModeleArticle] = []
+        a_suivante = True
 
         try:
             import requests
@@ -55,11 +61,21 @@ class ExtracteurAirCargoWeek(InterfaceExtracteurArticles):
                         url_source=element.get("url"),
                     )
                 )
-            self._journal.info("Extracted %d articles from Air Cargo Week", len(articles))
 
+            a_suivante = len(donnees_brutes) > 0
+            self._journal.info(
+                "Extracted %d articles from Air Cargo Week (page %d)",
+                len(articles),
+                numero_page,
+            )
         except Exception as erreur:
             self._journal.error(
                 "Error extracting articles from Air Cargo Week: %s", str(erreur)
             )
 
-        return articles
+        pagination = ModelePagination(
+            page_courante=numero_page,
+            page_maximale=None,
+            a_page_suivante=a_suivante,
+        )
+        return ResultatExtractionArticles(articles=articles, pagination=pagination)
