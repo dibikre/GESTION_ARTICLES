@@ -1,6 +1,7 @@
 """
 Composant représentant le panneau de contenu d'un onglet de source d'articles.
 Intègre le tableau d'articles et le bouton d'actualisation rotatif en haut à droite.
+Optimisé pour garantir un affichage fluide et immédiat lors des changements d'onglets.
 """
 
 from typing import List, Optional
@@ -45,7 +46,7 @@ class PanneauSourceArticles(QWidget):
 
         en_tete_horizontal.addStretch(1)
 
-        # Bouton d'actualisation placé expressément en haut à droite dans l'onglet
+        # Bouton d'actualisation placé en haut à droite dans l'onglet
         en_tete_horizontal.addWidget(self._bouton_actualisation)
         mise_en_page.addLayout(en_tete_horizontal)
 
@@ -60,6 +61,10 @@ class PanneauSourceArticles(QWidget):
     def _sur_clic_actualiser(self) -> None:
         """Déclenche la demande de rafraîchissement manuel pour cette source."""
         self.demande_actualisation.emit(self._nom_source)
+
+    def a_deja_articles(self) -> bool:
+        """Indique si le panneau a déjà ses données prêtes et affichées (pour zéro latence)."""
+        return self._tableau.a_articles_affiches()
 
     def definir_etat_chargement(self, en_cours: bool) -> None:
         """

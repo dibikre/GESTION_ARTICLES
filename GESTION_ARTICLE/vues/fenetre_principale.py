@@ -1,6 +1,6 @@
 """
 Fenêtre principale de l'application de gestion d'articles (PySide6).
-Structure responsive avec tableau pour chaque onglet et bouton d'actualisation en haut à droite.
+Optimisée pour un basculement instantané et ultra-fluide entre les onglets.
 """
 
 from typing import List, Optional
@@ -28,7 +28,7 @@ from GESTION_ARTICLE.modeles.modele_article import ModeleArticle
 class FenetrePrincipale(QMainWindow):
     """
     Fenêtre principale de l'application.
-    Gère la disposition des composants visuels et délègue les actions au contrôleur.
+    Gère la disposition des composants visuels et garantit la fluidité de navigation.
     """
 
     def __init__(
@@ -60,7 +60,6 @@ class FenetrePrincipale(QMainWindow):
         mise_en_page_principale.setContentsMargins(12, 12, 12, 12)
         mise_en_page_principale.setSpacing(8)
 
-        # Disposition supérieure alignant les onglets en haut à gauche
         disposition_onglets = QHBoxLayout()
         disposition_onglets.setContentsMargins(0, 0, 0, 0)
         disposition_onglets.addWidget(
@@ -68,9 +67,7 @@ class FenetrePrincipale(QMainWindow):
             alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop,
         )
 
-        # Les onglets occupent toute la largeur disponible pour rester réactifs
         mise_en_page_principale.addWidget(self._conteneur_onglets, stretch=1)
-
         self.setCentralWidget(widget_central)
 
     def _connecter_evenements(self) -> None:
@@ -84,31 +81,38 @@ class FenetrePrincipale(QMainWindow):
         self._controleur.etat_chargement_change.connect(self._sur_etat_chargement_change)
 
     def _initialiser_donnees(self) -> None:
-        """Initialise les onglets et déclenche le chargement automatique uniquement au lancement."""
+        """Initialise les onglets et lance le chargement non volontaire uniquement au démarrage."""
         titres = self._controleur.obtenir_titres_sources()
         self._conteneur_onglets.initialiser_onglets_sources(titres)
         self._barre_etat.definir_message(MESSAGE_STATUT_PRET)
 
-        # Seul le lancement initial de l'application déclenche le chargement non volontaire
         if titres:
             premier_onglet = titres[0]
             self._controleur.traiter_selection_onglet(0, premier_onglet)
 
     def _sur_changement_onglet(self, index: int, titre: str) -> None:
-        """Transmet l'événement au contrôleur et met à jour la barre d'état (utilise le cache)."""
+        """
+        Bascule d'onglet avec une fluidité totale : si déjà affiché, aucun recalcul.
+        """
+        panneau = self._conteneur_onglets.obtenir_panneau_source(titre)
+        if panneau and panneau.a_deja_articles():
+            # Affichage instantané (0 ms de latence)
+            self._barre_etat.definir_message(f"Active source: {titre} (Cached)")
+            return
+
         message_statut = self._controleur.traiter_selection_onglet(index, titre)
         self._barre_etat.definir_message(message_statut)
 
     def _sur_articles_receptionnes(
         self, nom_source: str, articles: List[ModeleArticle]
     ) -> None:
-        """Transmet la liste d'articles reçue au panneau d'onglet correspondant."""
+        """Injecte les articles dans le panneau correspondant."""
         panneau = self._conteneur_onglets.obtenir_panneau_source(nom_source)
         if panneau:
             panneau.definir_articles(articles)
 
     def _sur_etat_chargement_change(self, nom_source: str, en_cours: bool) -> None:
-        """Active ou désactive l'icône rotative d'actualisation de l'onglet."""
+        """Contrôle la rotation de l'icône d'actualisation de l'onglet."""
         panneau = self._conteneur_onglets.obtenir_panneau_source(nom_source)
         if panneau:
             panneau.definir_etat_chargement(en_cours)

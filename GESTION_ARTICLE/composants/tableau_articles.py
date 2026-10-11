@@ -1,11 +1,11 @@
 """
-Composant graphique réutilisable pour l'affichage tabulaire des articles.
-Affiche les 3 colonnes requises : Image (1ère), Title (2ème), Date (3ème).
-Aucune action de clic n'est attachée aux éléments conformément aux spécifications.
+Composant graphique réutilisable pour l'affichage tabulaire ultra-fluide des articles.
+Optimisé pour une réactivité instantanée sans aucun freeze d'affichage.
 """
 
 from typing import List, Optional
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHeaderView,
@@ -28,23 +28,24 @@ from GESTION_ARTICLE.services.service_chargement_image import ServiceChargementI
 
 
 class TableauArticles(QTableWidget):
-    """Tableau passif affichant les articles extraits (Image, Titre, Date)."""
+    """Tableau passif optimisé pour le rendu fluide et instantané."""
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
+        self._articles_affiches: List[ModeleArticle] = []
+        self._etiquettes_images: List[QLabel] = []
         self._initialiser_tableau()
 
     def _initialiser_tableau(self) -> None:
-        """Configure les colonnes, la disposition et désactive les interactions de clic."""
+        """Configure les colonnes et optimise le moteur de rendu Qt."""
         self.setColumnCount(len(ENTETES_COLONNES_ARTICLES))
         self.setHorizontalHeaderLabels(ENTETES_COLONNES_ARTICLES)
 
-        # Désactivation stricte de toute action de clic ou d'édition
+        # Désactivation complète des interactions de clic et focus pour fluidité maximale
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        # Configuration des en-têtes et du redimensionnement responsive
         en_tete_horizontal = self.horizontalHeader()
         en_tete_horizontal.setSectionResizeMode(
             INDEX_COLONNE_IMAGE, QHeaderView.ResizeMode.Fixed
@@ -67,49 +68,72 @@ class TableauArticles(QTableWidget):
         self.setAlternatingRowColors(True)
         self.setShowGrid(False)
 
+    def a_articles_affiches(self) -> bool:
+        """Indique si le tableau contient déjà des articles affichés."""
+        return len(self._articles_affiches) > 0
+
     def afficher_articles(self, articles: List[ModeleArticle]) -> None:
         """
-        Remplit le tableau avec la liste des articles.
-
-        :param articles: Liste d'articles à présenter.
+        Remplit le tableau en coupant temporairement les rafraîchissements pour fluidité.
         """
-        self.setRowCount(len(articles))
+        # Si les mêmes articles sont déjà présents, ne pas recalculer l'arbre graphique
+        if self._articles_affiches == articles:
+            return
 
-        for index_ligne, article in enumerate(articles):
-            self.setRowHeight(index_ligne, HAUTEUR_LIGNE_ARTICLE)
+        self._articles_affiches = list(articles)
+        self._etiquettes_images.clear()
 
-            # 1ère colonne : Image
-            widget_image = self._creer_cellule_image(article.url_image)
-            self.setCellWidget(index_ligne, INDEX_COLONNE_IMAGE, widget_image)
+        # Optimisation Qt critique : gèle les rafraîchissements pendant le peuplement
+        self.setUpdatesEnabled(False)
+        try:
+            self.setRowCount(len(articles))
 
-            # 2ème colonne : Titre
-            element_titre = QTableWidgetItem(article.titre)
-            element_titre.setTextAlignment(
-                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
-            )
-            element_titre.setFlags(Qt.ItemFlag.ItemIsEnabled)
-            self.setItem(index_ligne, INDEX_COLONNE_TITRE, element_titre)
+            for index_ligne, article in enumerate(articles):
+                self.setRowHeight(index_ligne, HAUTEUR_LIGNE_ARTICLE)
 
-            # 3ème colonne : Date
-            element_date = QTableWidgetItem(article.date_formatee())
-            element_date.setTextAlignment(
-                Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter
-            )
-            element_date.setFlags(Qt.ItemFlag.ItemIsEnabled)
-            self.setItem(index_ligne, INDEX_COLONNE_DATE, element_date)
+                # 1ère colonne : Image avec chargement asynchrone non bloquant
+                widget_image = self._creer_cellule_image(article.url_image)
+                self.setCellWidget(index_ligne, INDEX_COLONNE_IMAGE, widget_image)
+
+                # 2ème colonne : Titre
+                element_titre = QTableWidgetItem(article.titre)
+                element_titre.setTextAlignment(
+                    Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+                )
+                element_titre.setFlags(Qt.ItemFlag.ItemIsEnabled)
+                self.setItem(index_ligne, INDEX_COLONNE_TITRE, element_titre)
+
+                # 3ème colonne : Date
+                element_date = QTableWidgetItem(article.date_formatee())
+                element_date.setTextAlignment(
+                    Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter
+                )
+                element_date.setFlags(Qt.ItemFlag.ItemIsEnabled)
+                self.setItem(index_ligne, INDEX_COLONNE_DATE, element_date)
+        finally:
+            self.setUpdatesEnabled(True)
 
     def _creer_cellule_image(self, url_image: Optional[str]) -> QLabel:
-        """Crée une étiquette QLabel contenant la vignette redimensionnée."""
+        """Crée le QLabel et l'alimente de manière asynchrone sans latence."""
         etiquette = QLabel()
         etiquette.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        pixmap = ServiceChargementImage.charger_pixmap_depuis_url(
+
+        def mettre_a_jour_pixmap(url_recue: str, pixmap: QPixmap) -> None:
+            if url_recue == url_image:
+                etiquette.setPixmap(pixmap)
+
+        pixmap_initial = ServiceChargementImage.obtenir_pixmap(
             url_image=url_image,
             largeur_cible=120,
             hauteur_cible=68,
+            sur_image_prete=mettre_a_jour_pixmap if url_image else None,
         )
-        etiquette.setPixmap(pixmap)
+        etiquette.setPixmap(pixmap_initial)
+        self._etiquettes_images.append(etiquette)
         return etiquette
 
     def vider(self) -> None:
-        """Efface l'ensemble des lignes du tableau."""
+        """Efface l'ensemble des lignes du tableau de manière sécurisée."""
+        self._articles_affiches.clear()
+        self._etiquettes_images.clear()
         self.setRowCount(0)

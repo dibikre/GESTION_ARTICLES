@@ -24,6 +24,7 @@ from GESTION_ARTICLE.configuration.configuration_theme import (
     FEUILLE_DE_STYLE_APPLICATION,
 )
 from GESTION_ARTICLE.controleurs.controleur_principal import ControleurPrincipal
+from GESTION_ARTICLE.services.service_chargement_image import ServiceChargementImage
 from GESTION_ARTICLE.services.service_journalisation import ServiceJournalisation
 from GESTION_ARTICLE.vues.fenetre_principale import FenetrePrincipale
 
@@ -41,6 +42,8 @@ def demarrer_application() -> int:
 
     application = QApplication(sys.argv)
     application.setStyleSheet(FEUILLE_DE_STYLE_APPLICATION)
+
+    ServiceChargementImage.initialiser()
 
     controleur = ControleurPrincipal()
     fenetre = FenetrePrincipale(controleur=controleur)
