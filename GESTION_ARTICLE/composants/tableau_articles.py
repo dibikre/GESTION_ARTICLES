@@ -1,11 +1,10 @@
 """
 Composant graphique réutilisable pour l'affichage tabulaire ultra-fluide des articles.
-Optimisé pour une réactivité instantanée sans aucun freeze d'affichage.
+Assure un affichage fiable des vignettes, y compris lors du défilement (scroll).
 """
 
 from typing import List, Optional
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHeaderView,
@@ -28,7 +27,7 @@ from GESTION_ARTICLE.services.service_chargement_image import ServiceChargementI
 
 
 class TableauArticles(QTableWidget):
-    """Tableau passif optimisé pour le rendu fluide et instantané."""
+    """Tableau passif optimisé pour le rendu fluide et le chargement continu des vignettes."""
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
@@ -37,11 +36,11 @@ class TableauArticles(QTableWidget):
         self._initialiser_tableau()
 
     def _initialiser_tableau(self) -> None:
-        """Configure les colonnes et optimise le moteur de rendu Qt."""
+        """Configure les colonnes et optimise le comportement lors du défilement."""
         self.setColumnCount(len(ENTETES_COLONNES_ARTICLES))
         self.setHorizontalHeaderLabels(ENTETES_COLONNES_ARTICLES)
 
-        # Désactivation complète des interactions de clic et focus pour fluidité maximale
+        # Désactivation stricte des interactions de clic et focus pour fluidité maximale
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -68,22 +67,23 @@ class TableauArticles(QTableWidget):
         self.setAlternatingRowColors(True)
         self.setShowGrid(False)
 
+        # Défilement fluide par pixel pour éviter les à-coups visuels
+        self.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+
     def a_articles_affiches(self) -> bool:
         """Indique si le tableau contient déjà des articles affichés."""
         return len(self._articles_affiches) > 0
 
     def afficher_articles(self, articles: List[ModeleArticle]) -> None:
         """
-        Remplit le tableau en coupant temporairement les rafraîchissements pour fluidité.
+        Remplit le tableau avec les articles et prépare le chargement fiable des vignettes.
         """
-        # Si les mêmes articles sont déjà présents, ne pas recalculer l'arbre graphique
         if self._articles_affiches == articles:
             return
 
         self._articles_affiches = list(articles)
         self._etiquettes_images.clear()
 
-        # Optimisation Qt critique : gèle les rafraîchissements pendant le peuplement
         self.setUpdatesEnabled(False)
         try:
             self.setRowCount(len(articles))
@@ -91,7 +91,7 @@ class TableauArticles(QTableWidget):
             for index_ligne, article in enumerate(articles):
                 self.setRowHeight(index_ligne, HAUTEUR_LIGNE_ARTICLE)
 
-                # 1ère colonne : Image avec chargement asynchrone non bloquant
+                # 1ère colonne : Image avec chargement garanti même après défilement
                 widget_image = self._creer_cellule_image(article.url_image)
                 self.setCellWidget(index_ligne, INDEX_COLONNE_IMAGE, widget_image)
 
@@ -114,19 +114,17 @@ class TableauArticles(QTableWidget):
             self.setUpdatesEnabled(True)
 
     def _creer_cellule_image(self, url_image: Optional[str]) -> QLabel:
-        """Crée le QLabel et l'alimente de manière asynchrone sans latence."""
+        """Crée l'étiquette et y attache le récepteur de vignette garanti."""
         etiquette = QLabel()
         etiquette.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        etiquette.setMinimumSize(120, 68)
 
-        def mettre_a_jour_pixmap(url_recue: str, pixmap: QPixmap) -> None:
-            if url_recue == url_image:
-                etiquette.setPixmap(pixmap)
-
-        pixmap_initial = ServiceChargementImage.obtenir_pixmap(
+        # Assigne immédiatement le pixmap (cache ou défaut) et enregistre la mise à jour asynchrone
+        pixmap_initial = ServiceChargementImage.charger_vignette(
             url_image=url_image,
-            largeur_cible=120,
-            hauteur_cible=68,
-            sur_image_prete=mettre_a_jour_pixmap if url_image else None,
+            sur_reception=etiquette.setPixmap,
+            largeur=120,
+            hauteur=68,
         )
         etiquette.setPixmap(pixmap_initial)
         self._etiquettes_images.append(etiquette)
